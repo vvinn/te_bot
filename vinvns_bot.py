@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # Create the Updater and pass it your bot's token.
 # Make sure to set use_context=True to use the new context based callbacks
 # Post version 12 this will no longer be necessary
-updater = Updater("1662240078:AAG-vOjO0paiiQ3APgBFSHpvR6hddGVfutI", use_context=True)
+updater = Updater("<bot id by  bot father>", use_context=True)
 r = redis.Redis(host='localhost', port=6379, db=0) # connection to the databse
 
 def morning(context: CallbackContext):
