@@ -14,9 +14,13 @@ Basic Echobot example, repeats messages.
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-
+from resource import *
+import socket
+import time
+from datetime import date
 import logging
 import redis
+import telegram
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
 # Enable logging
@@ -29,8 +33,18 @@ logger = logging.getLogger(__name__)
 # Create the Updater and pass it your bot's token.
 # Make sure to set use_context=True to use the new context based callbacks
 # Post version 12 this will no longer be necessary
-updater = Updater("<bot id by  bot father>", use_context=True)
+updater = Updater(tokens, use_context=True)
 r = redis.Redis(host='localhost', port=6379, db=0) # connection to the databse
+
+def is_connected():
+    try:
+        # connect to the host -- tells us if the host is actually
+        # reachable
+        socket.create_connection(("1.1.1.1", 53))
+        return True
+    except OSError:
+        pass
+    return False
 
 def morning(context: CallbackContext):
     message = "Good Morning! Have a nice day!"
@@ -63,7 +77,16 @@ def help(update, context):
 
 def echo(update, context):
     """Echo the user message."""
-    update.message.reply_text(update.message.text)
+    if update.message.text == 'time':
+        today = date.today()
+        update.message.reply_text(r.get(str(today)).decode("UTF-8"))
+    else:
+        update.message.reply_text(update.message.text)
+
+def gettime(update, context):
+    """ time elasped for a day"""
+    today = date.today()
+    update.message.reply_text(r.get(str(today)).decode("UTF-8"))
 
 
 def error(update, context):
@@ -72,6 +95,13 @@ def error(update, context):
 
 
 def main():
+
+    while not is_connected():
+        time.sleep(50)
+
+    time.sleep(5)
+    bot = telegram.Bot(token=tokens)
+    bot.send_message(chat_id=chat_ids, text='Hi I am up........!')
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -82,6 +112,8 @@ def main():
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, echo))
+    
+    dp.add_handler(CommandHandler("time", gettime))
 
     # log all errors
     dp.add_error_handler(error)
